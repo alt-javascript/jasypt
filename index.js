@@ -1,3 +1,8 @@
-'use strict';
+import Jasypt from './jasypt.js';
+import Encryptor from './encryptor.js';
+import Digester from './digester.js';
 
-module.exports = require('./jasypt');
+Jasypt.Encryptor = Encryptor;
+Jasypt.Digester = Digester;
+
+export default Jasypt;

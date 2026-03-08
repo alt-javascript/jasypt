@@ -1,10 +1,8 @@
-'use strict';
+import Benchmark from 'benchmark';
+import benchmarks from 'beautify-benchmark';
+import Jasypt from '../index.js';
 
-const Benchmark = require('benchmark');
-const benchmarks = require('beautify-benchmark');
 const suite = new Benchmark.Suite();
-const Jasypt = require('..');
-
 const jasypt = new Jasypt();
 jasypt.setPassword('0x1995');
 

@@ -1,12 +1,10 @@
-'use strict';
+import crypto from 'crypto';
+import assert from 'assert';
+import Encryptor from './encryptor.js';
+import { isEmpty, isType } from './util.js';
+import cacher from './cache.js';
 
-const crypto = require('crypto');
-const assert = require('assert');
-const Encryptor = require('./encryptor');
-const util = require('./util');
-const cacher = require('./cache');
-
-class Jasypt {
+export default class Jasypt {
 
   constructor(opts = {}) {
     this._encryptor = new Encryptor();
@@ -21,64 +19,72 @@ class Jasypt {
   }
 
   /**
-   * 设置秘钥
-   * @param {String} password 秘钥
+   * Set the encryption algorithm
+   * @param {String} algorithm algorithm name
+   */
+  setAlgorithm(algorithm) {
+    this._encryptor.setAlgorithm(algorithm);
+  }
+
+  /**
+   * Set the encryption password
+   * @param {String} password secret key
    */
   setPassword(password) {
-    assert(!util.isEmpty(util), 'Password cannot be set empty');
+    assert(!isEmpty(password), 'Password cannot be set empty');
     this.password = password;
   }
 
   /**
-   * 加密
-   * @param {String} message 需要加密的文本
+   * Encrypt a plaintext message
+   * @param {String} message text to encrypt
    */
   encrypt(message) {
-    if (util.isEmpty(message)) {
+    if (isEmpty(message)) {
       return null;
     }
     return this._encryptor.encrypt(message, this.password, this.salt, this.iterations);
   }
 
   /**
-   * 解密
-   * @param {String} encryptedMessage 需要解密的文本
+   * Decrypt an encrypted message
+   * @param {String} encryptedMessage text to decrypt
    */
   decrypt(encryptedMessage) {
-    if (util.isEmpty(encryptedMessage)) {
+    if (isEmpty(encryptedMessage)) {
       return null;
     }
 
     const cacheKey = this.getCacheKey(encryptedMessage);
     if (cacher.has(cacheKey)) return cacher.get(cacheKey);
-  
+
     const value = this._encryptor.decrypt(encryptedMessage, this.password, this.iterations);
     cacher.set(cacheKey, value);
-  
+
     return value;
   }
 
   /**
-   * 解密对象里含有ENC(xxxx)格式的value
-   * @param {Object} obj 入参配置对象
+   * Recursively decrypt all ENC(xxx) values in a config object
+   * @param {Object} obj config object
    */
-  decryptConfig (obj) {
-    if (!util.isType('Object', obj)) {
+  decryptConfig(obj) {
+    if (!isType('Object', obj)) {
       return;
     }
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const value = obj[key];
-        if (util.isType('Object', value)) {
+        if (isType('Object', value)) {
           this.decryptConfig(value);
-        } else if (util.isType('String', value)) {
+        } else if (isType('String', value)) {
           if (value.indexOf('ENC(') === 0 && value.lastIndexOf(')') === value.length - 1) {
             const encryptMsg = value.substring(4, value.length - 1);
             obj[key] = this.decrypt(encryptMsg);
           }
-        } else if (util.isType('Array', value)) {
+        } else if (isType('Array', value)) {
           for (const item of value) {
-            if (util.isType('Object', item)) {
+            if (isType('Object', item)) {
               this.decryptConfig(item);
             }
           }
@@ -88,8 +94,4 @@ class Jasypt {
       }
     }
   }
-
-
 }
-
-module.exports = Jasypt;

@@ -1,5 +1,3 @@
-'use strict';
+import LRU from 'lru-cache';
 
-const LRU = require('lru-cache');
-
-module.exports = new LRU(2000);
+export default new LRU(2000);

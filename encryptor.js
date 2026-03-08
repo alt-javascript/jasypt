@@ -1,68 +1,84 @@
-'use strict';
+import assert from 'assert';
+import createHash from 'create-hash';
+import des from 'des.js';
 
-const assert = require('assert');
-const crypto = require('crypto');
-const util = require('./util');
+const DESCBC = des.CBC.instantiate(des.DES);
+const EDECBC = des.CBC.instantiate(des.EDE);
 
-class Encryptor {
+const ALGO_CONFIG = {
+  'PBEWITHMD5ANDDES':       { hash: 'md5',  Cipher: DESCBC, keyLen: 8,  ivLen: 8 },
+  'PBEWITHMD5ANDTRIPLEDES': { hash: 'md5',  Cipher: EDECBC, keyLen: 24, ivLen: 8 },
+  'PBEWITHSHA1ANDDESEDE':   { hash: 'sha1', Cipher: EDECBC, keyLen: 24, ivLen: 8 },
+};
+
+export default class Encryptor {
   constructor() {
-    this.algorithm = '';
+    this.algorithm = 'PBEWITHMD5ANDDES';
   }
 
   /**
-   * 设置加密算法
-   * @param {String} algorithm 算法
+   * Set the encryption algorithm
+   * @param {String} algorithm algorithm name
    */
   setAlgorithm(algorithm) {
-    assert(!util.isEmpty(algorithm), `Algorithm cannot be set empty: ${algorithm}`);
-    this.algorithm = algorithm;
+    const normalized = algorithm.toUpperCase();
+    assert(ALGO_CONFIG[normalized], `Unsupported algorithm: ${algorithm}`);
+    this.algorithm = normalized;
   }
 
   /**
-   * 设置偏移量
-   * @param {String} password 秘钥
-   * @param {String} salt 盐
-   * @param {String} iterations 偏移量
+   * Derive key material using OpenSSL EVP_BytesToKey-compatible KDF.
+   * Produces successive hash blocks: H_i = Hash^n(H_{i-1} || password || salt)
+   * @param {String} hashAlg hash algorithm name
+   * @param {String} password secret key
+   * @param {Buffer} salt random salt
+   * @param {Number} iterations iteration count
+   * @param {Number} totalBytes total bytes of key material needed
    */
-  KDF (password, salt, iterations) {
+  KDF(hashAlg, password, salt, iterations, totalBytes) {
     const pwd = Buffer.from(password, 'utf-8');
-    let key = Buffer.concat([pwd, salt]);
-    for (let i = 0; i < iterations; i++) {
-      key = crypto.createHash('md5').update(key).digest();
+    let result = Buffer.alloc(0);
+    let prev = Buffer.alloc(0);
+
+    while (result.length < totalBytes) {
+      let block = Buffer.concat([prev, pwd, salt]);
+      for (let i = 0; i < iterations; i++) {
+        block = createHash(hashAlg).update(block).digest();
+      }
+      result = Buffer.concat([result, block]);
+      prev = block;
     }
-    return key;
+
+    return result.subarray(0, totalBytes);
   }
 
   /**
-   * 获取秘钥和盐
-   * @param {String} password 秘钥
-   * @param {String} salt 盐
-   * @param {String} iterations 偏移量
+   * Derive the cipher key and IV from password, salt, and iterations
+   * @param {String} password secret key
+   * @param {Buffer} salt random salt
+   * @param {Number} iterations iteration count
    */
   getKeyIV(password, salt, iterations) {
-    const key = this.KDF(password, salt, iterations);
-    const keybuf = Buffer.from(key, 'binary').slice(0, 8);
-    const ivbuf = Buffer.from(key, 'binary').slice(8, 16);
-    return [ keybuf, ivbuf ];
+    const { hash, keyLen, ivLen } = ALGO_CONFIG[this.algorithm];
+    const derived = this.KDF(hash, password, salt, iterations, keyLen + ivLen);
+    return [derived.subarray(0, keyLen), derived.subarray(keyLen)];
   }
 
   /**
-   * 加密
-   * @param {String} payload 需要加密的文本
-   * @param {String} password 秘钥
-   * @param {String} salt 盐
-   * @param {String} iterations 偏移量
+   * Encrypt a plaintext payload
+   * @param {String} payload text to encrypt
+   * @param {String} password secret key
+   * @param {Buffer} salt random salt
+   * @param {Number} iterations iteration count
    */
   encrypt(payload, password, salt, iterations) {
+    const { Cipher } = ALGO_CONFIG[this.algorithm];
     const kiv = this.getKeyIV(password, salt, iterations);
-    const cipher = crypto.createCipheriv('des', kiv[0], kiv[1]);
+    const cipher = Cipher.create({ type: 'encrypt', key: Array.from(kiv[0]), iv: Array.from(kiv[1]) });
 
-    const encrypted = [];
-    encrypted.push(cipher.update(payload, 'utf-8', 'hex'));
-    encrypted.push(cipher.final('hex'));
-
-    const out = Buffer.from(encrypted.join(''), 'hex');
-    const result =  Buffer.alloc(out.length + salt.length);
+    const input = Array.from(Buffer.from(payload, 'utf-8'));
+    const out = Buffer.from(cipher.update(input).concat(cipher.final()));
+    const result = Buffer.alloc(out.length + salt.length);
 
     salt.copy(result, 0, 0, salt.length);
     out.copy(result, salt.length, 0, out.length);
@@ -71,14 +87,14 @@ class Encryptor {
   }
 
   /**
-   * 解密
-   * @param {String} payload 需要解密的文本
-   * @param {String} password 秘钥
-   * @param {String} iterations 偏移量
+   * Decrypt a base64-encoded encrypted payload
+   * @param {String} payload base64 ciphertext to decrypt
+   * @param {String} password secret key
+   * @param {Number} iterations iteration count
    */
   decrypt(payload, password, iterations) {
+    const { Cipher } = ALGO_CONFIG[this.algorithm];
     const encryptedMessage = Buffer.from(payload, 'base64');
-    const decrypted = [];
     const saltStart = 0;
     const saltSizeBytes = 8;
 
@@ -93,13 +109,10 @@ class Encryptor {
     encryptedMessage.copy(encryptedMessageKernel, 0, encMesKernelStart, encryptedMessage.length);
 
     const kiv = this.getKeyIV(password, salt, iterations);
-    const decipher = crypto.createDecipheriv('des', kiv[0], kiv[1]);
+    const decipher = Cipher.create({ type: 'decrypt', key: Array.from(kiv[0]), iv: Array.from(kiv[1]) });
 
-    decrypted.push(decipher.update(encryptedMessageKernel));
-    decrypted.push(decipher.final());
+    const decrypted = decipher.update(Array.from(encryptedMessageKernel)).concat(decipher.final());
 
-    return decrypted.join('');
+    return Buffer.from(decrypted).toString('utf-8');
   }
 }
-
-module.exports = Encryptor;

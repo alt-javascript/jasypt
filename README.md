@@ -1,67 +1,96 @@
-## Jasypt
+## @alt-javascript/Jasypt
 
 [![NPM version][npm-image]][npm-url]
-[![Codacy][codacy-image]][codacy-url]
 [![build status][build-image]][build-url]
-[![Test coverage][codecov-image]][codecov-url]
 [![npm downloads/month][downloads-month-image]][download-url]
 [![npm downloads][downloads-image]][download-url]
 
 
-[npm-image]: https://img.shields.io/npm/v/jasypt.svg?style=flat-square
-[npm-url]: https://www.npmjs.com/package/jasypt
-[build-image]: https://github.com/rickyes/jasypt/actions/workflows/node.js.yml/badge.svg?branch=master
-[build-url]: https://github.com/rickyes/jasypt
-[codecov-image]: https://codecov.io/gh/rickyes/jasypt/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/github/rickyes/jasypt?branch=master
-[downloads-month-image]: https://img.shields.io/npm/dm/jasypt.svg?style=flat-square
-[download-url]: https://npmjs.org/package/jasypt
-[downloads-image]: https://img.shields.io/npm/dt/jasypt.svg
-[codacy-image]: https://app.codacy.com/project/badge/Grade/7a96dea4ed924752b2f131c0ab5ec812
-[codacy-url]: https://app.codacy.com/manual/rickyes/jasypt
+[npm-image]: https://img.shields.io/npm/v/%40alt-javascript%2Fjasypt.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@alt-javascript/jasypt
+[build-image]: https://github.com/alt-javascript/jasypt/actions/workflows/node.js.yml/badge.svg?branch=master
+[build-url]: https://github.com/alt-javascript/jasypt
+[downloads-month-image]: https://img.shields.io/npm/dm/%40alt-javascript%2Fjasypt.svg?style=flat-square
+[download-url]: https://www.npmjs.com/package/@alt-javascript/jasypt
+[downloads-image]: https://img.shields.io/npm/dt/%40alt-javascript%2Fjasypt.svg
 
-org.jasypt.util.text.BasicTextEncryptor for Node.js
+Jasypt (Java) clone for Node.js
 
-#### 背景
-`Spring Boot` 集成 `jasypt` 对配置项进行加密，为了与 `Java` 体系保持一致，于是有了 `Jasypt.js`
+#### Background
+`Spring Boot` integrates `jasypt` to encrypt configuration values. `@alt-javascript/Jasypt.js` exists to provide a compatible implementation for Node.js.
 
-#### 使用
+#### Usage
 **`SDK`**
 ``` js
-'use strict';
+import Jasypt from '@alt-javascript/jasypt';
 
-const Jasypt = require('jasypt');
 const jasypt = new Jasypt();
-// 设置秘钥
+// set password
 jasypt.setPassword('G0CvDz7oJn60');
-// 加密
+// encrypt
 const encryptMsg = jasypt.encrypt('admin');
-// 解密
+// decrypt
 const decryptMsg = jasypt.decrypt(encryptMsg);
 ```
 
-**`命令行`**
-``` sh
-$ jasypt -h
+**`Digester SDK`**
+``` js
+import Jasypt from '@alt-javascript/jasypt';
 
-Usage: jasypt [options]
+const { Digester } = Jasypt;
+const digester = new Digester();
+// digest (one-way hash)
+const stored = digester.digest('admin');
+// verify
+const isMatch = digester.matches('admin', stored); // true
+```
+
+**`Command line`**
+``` sh
+$ jasypt --help
+
+Usage: jasypt [options] [command]
 
 Options:
-  -v, --version               output the version number
-  -p, --password <pwd>        The secret key
-  -e, --encrypt <msg>         Text to be encrypting
-  -d, --decrypt <encryptMsg>  Text to be decrypting
-  -h, --help                  output usage information
+  -v, --version           output the version number
+  -p, --password <pwd>    The secret key
+  -a, --algorithm <algo>  Encryption algorithm (default: PBEWITHMD5ANDDES)
+  -h, --help              output usage information
+
+Commands:
+  encrypt|enc <msg>       Encrypt a plaintext message
+  decrypt|dec <msg>       Decrypt an encrypted message
+  digest|dig <msg>        One-way digest (hash) a message
+  matches|match <msg> <stored>  Verify a message against a stored digest
+
+Supported algorithms:
+  PBEWITHMD5ANDDES (default)
+  PBEWITHMD5ANDTRIPLEDES
+  PBEWITHSHA1ANDDESEDE
 
 Examples:
 
-  $ jasypt -p 0x1995 -e admin
-  $ jasypt -p 0x1995 -d nsbC5r0ymz740/aURtuRWw==
+  $ jasypt -p 0x1995 encrypt admin
+  $ jasypt -p 0x1995 decrypt nsbC5r0ymz740/aURtuRWw==
+  $ jasypt -p 0x1995 -a PBEWITHMD5ANDTRIPLEDES encrypt admin
+
+  $ jasypt digest admin
+  $ jasypt digest -a SHA-512 -i 500 -s 16 admin
+  $ jasypt matches admin 6N0oHJb7...==
+  $ jasypt matches -a SHA-512 -i 500 -s 16 admin 6N0oHJb7...==
 ```
 
-#### 解密加密项 for Spring Boot
+**`Digest command options`**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-a, --algorithm <algo>` | `SHA-256` | Digest algorithm (`MD5`, `SHA-1`, `SHA-224`, `SHA-256`, `SHA-384`, `SHA-512`) |
+| `-i, --iterations <n>` | `1000` | Number of hash iterations |
+| `-s, --salt-size <n>` | `8` | Salt size in bytes |
+
+#### Decrypt ENC(...) values for Spring Boot
 ``` js
-// 对配置项的ENC(xxx)进行解密
+// decrypt ENC(xxx) values in a config object
 const data = {
   code: 42,
   test: {
@@ -94,7 +123,7 @@ jasypt.setPassword('P8dEw34TgvbY');
 jasypt.decryptConfig(data);
 ```
 ``` js
-// 解密出来的内容
+// decrypted result
 const data = {
   code: 42,
   test: {
@@ -122,3 +151,6 @@ const data = {
   }
 };
 ```
+
+This project is a fork (clone) of [jasypt @ npmjs.com](https://www.npmjs.com/package/jasypt) | [jasypt @ github.com/rickyes](https://github.com/rickyes/jasypt) by
+[Ricky泽阳](mailtto://mail@zhoumq.cn), updated to work with Node LTS (post v16) with additional features, and improved CLI options.
