@@ -1,4 +1,4 @@
-1.0.0 / 2026-03-08
+1.0.0 / 2026-03-10
 ==================
 
 * Initial fork - @craigparra, updates with Claude: 
