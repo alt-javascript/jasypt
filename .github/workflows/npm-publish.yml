@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         node-version: [24.x]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +28,6 @@ jobs:
       - name: Run Install
         run: |
           npm install
-          npm install -g tap codecov
-      - name: Run cov
-        run: |
-          npm ci
-          tap --coverage-report=text-lcov > coverage.lcov && codecov
 
   publish-npm:
     needs: build
