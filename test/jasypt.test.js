@@ -36,6 +36,17 @@ test('encrypt & decrypt', t => {
   t.end();
 });
 
+test('encrypt & decrypt', t => {
+  const encryptor = new Encryptor();
+  encryptor.setSalt("");
+  encryptor.setIterations(100);
+
+  const encryptMsg = encryptor.encrypt(message,password);
+  const decryptMsg = encryptor.decrypt(encryptMsg,password);
+  t.equal(decryptMsg, message);
+  t.end();
+});
+
 
 test('PBEWITHMD5ANDTRIPLEDES encrypt & decrypt', t => {
   const jasypt = new Jasypt();
@@ -167,6 +178,14 @@ for (const algo of allDigestAlgorithms) {
 }
 
 test('digester: default SHA-256 digest and matches', t => {
+  const jasypt = new Jasypt();
+  const stored = jasypt.digest('admin');
+  t.equal(jasypt.matches('admin', stored), true);
+  t.equal(jasypt.matches('wrong', stored), false);
+  t.end();
+});
+
+test('digester: default SHA-256 digest and matches', t => {
   const digester = new Digester();
   const stored = digester.digest('admin');
   t.equal(digester.matches('admin', stored), true);
@@ -174,10 +193,10 @@ test('digester: default SHA-256 digest and matches', t => {
   t.end();
 });
 
-test('digester: SHA-512 with custom salt size and iterations', t => {
+test('digester: SHA-512 with custom salt and iterations', t => {
   const digester = new Digester();
   digester.setAlgorithm('SHA-512');
-  digester.setSaltSize(16);
+  digester.setSalt('123456789012345');
   digester.setIterations(500);
   const stored = digester.digest('admin');
   t.equal(digester.matches('admin', stored), true);

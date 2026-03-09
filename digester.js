@@ -1,5 +1,6 @@
 import assert from 'assert';
 import crypto from 'crypto';
+import {isEmpty} from "./util.js";
 
 // Maps jasypt-compatible algorithm names to Node.js crypto hash names
 const ALGO_MAP = {
@@ -21,10 +22,11 @@ const ALGO_MAP = {
 const _availableHashes = new Set(crypto.getHashes());
 
 class Digester {
-  constructor() {
-    this.algorithm = 'SHA-256';
+  constructor(opts = {}) {
+    this.setAlgorithm(opts.algorithm || 'SHA-256');
+    this.salt = opts.salt || null;
     this.saltSize = 8;
-    this.iterations = 1000;
+    this.iterations = opts.iterations || 1000;
   }
 
   /**
@@ -38,11 +40,11 @@ class Digester {
   }
 
   /**
-   * Set the salt size in bytes
-   * @param {Number} size number of salt bytes
+   * Set a fixed salt string used for digest and matches
+   * @param {String} salt fixed salt value
    */
-  setSaltSize(size) {
-    this.saltSize = size;
+  setSalt(salt) {
+    this.salt = salt;
   }
 
   /**
@@ -56,8 +58,8 @@ class Digester {
   /**
    * Compute the iterated hash.
    * First iteration: Hash(salt || message). Subsequent: Hash(digest).
-   * @param {String} hashAlg create-hash algorithm name
-   * @param {Buffer} salt random salt
+   * @param {String} hashAlg Node.js crypto algorithm name
+   * @param {Buffer} salt salt bytes
    * @param {String} message plaintext message
    * @param {Number} iterations iteration count
    * @return {Buffer} raw digest bytes
@@ -72,29 +74,40 @@ class Digester {
   }
 
   /**
-   * Digest a plaintext message
+   * Digest a plaintext message.
+   * Output format: base64(salt_bytes + hash_bytes)
    * @param {String} message message to digest
+   * @param {String} salt optional fixed salt (overrides this.salt)
+   * @param {Number} iterations optional iteration count
    * @return {String} base64-encoded salt + digest
    */
-  digest(message) {
-    const salt = crypto.randomBytes(this.saltSize);
+  digest(message, salt, iterations) {
+    const _salt = !isEmpty(salt)      ? Buffer.from(salt)
+                : !isEmpty(this.salt)  ? Buffer.from(this.salt)
+                : crypto.randomBytes(this.saltSize);
     const hashAlg = ALGO_MAP[this.algorithm];
-    const digest = this._compute(hashAlg, salt, message, this.iterations);
-    return Buffer.concat([salt, digest]).toString('base64');
+    const digest = this._compute(hashAlg, _salt, message, iterations || this.iterations);
+    return Buffer.concat([_salt, digest]).toString('base64');
   }
 
   /**
-   * Check whether a plaintext message matches a stored digest
+   * Check whether a plaintext message matches a stored digest.
+   * For random-salt digests, the salt is extracted from the first saltSize bytes of the stored value.
+   * For fixed-salt digests (this.salt set), that salt is used directly.
    * @param {String} message plaintext message to verify
    * @param {String} storedDigest base64-encoded stored digest
+   * @param {String} salt optional fixed salt (overrides this.salt)
+   * @param {Number} iterations optional iteration count
    * @return {Boolean} true if the message matches
    */
-  matches(message, storedDigest) {
+  matches(message, storedDigest, salt, iterations) {
     const stored = Buffer.from(storedDigest, 'base64');
-    const salt = stored.subarray(0, this.saltSize);
-    const expected = stored.subarray(this.saltSize);
+    const _salt = !isEmpty(salt)      ? Buffer.from(salt)
+                : !isEmpty(this.salt)  ? Buffer.from(this.salt)
+                : stored.subarray(0, this.saltSize);
+    const expected = stored.subarray(_salt.length);
     const hashAlg = ALGO_MAP[this.algorithm];
-    const computed = this._compute(hashAlg, salt, message, this.iterations);
+    const computed = this._compute(hashAlg, _salt, message, iterations || this.iterations);
     if (computed.length !== expected.length) return false;
     let diff = 0;
     for (let i = 0; i < computed.length; i++) {

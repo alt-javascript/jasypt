@@ -35,12 +35,11 @@ const decryptMsg = jasypt.decrypt(encryptMsg,'G0CvDz7oJn60');
 ``` js
 import Jasypt from '@alt-javascript/jasypt';
 
-const { Digester } = Jasypt;
-const digester = new Digester();
+const jasypt = new Jasypt();
 // digest (one-way hash)
-const stored = digester.digest('admin');
+const stored = jasypt.digest('admin');
 // verify
-const isMatch = digester.matches('admin', stored); // true
+const isMatch = jasypt.matches('admin', stored); // true
 ```
 
 **`Command line`**
@@ -62,6 +61,9 @@ Commands:
   matches|match <msg> <stored>  Verify a message against a stored digest
 
 Supported algorithms:
+
+  encrypt/decrypt:
+  
   PBEWITHMD5ANDDES (default)
   PBEWITHMD5ANDTRIPLEDES
   PBEWITHSHA1ANDDESEDE
@@ -84,6 +86,21 @@ Supported algorithms:
   PBEWITHHMACSHA512ANDAES_128
   PBEWITHHMACSHA512ANDAES_256
 
+  digest/matches:
+  
+  MD2
+  MD5
+  SHA-1 
+  SHA-224
+  SHA-256
+  SHA-384
+  SHA-512
+  SHA-512/224
+  SHA-512/256
+  SHA3-224
+  SHA3-256
+  SHA3-384
+  SHA3-512
 Examples:
 
   $ jasypt encrypt -p 0x1995 admin
@@ -94,6 +111,7 @@ Examples:
   $ jasypt digest -a SHA-512 -i 500 -s 16 admin
   $ jasypt matches admin 6N0oHJb7...==
   $ jasypt matches -a SHA-512 -i 500 -s 16 admin 6N0oHJb7...==
+  
 ```
 
 **`Encrypt command options`**
