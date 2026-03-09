@@ -36,6 +36,7 @@ test('encrypt & decrypt', t => {
   t.end();
 });
 
+
 test('PBEWITHMD5ANDTRIPLEDES encrypt & decrypt', t => {
   const jasypt = new Jasypt();
 

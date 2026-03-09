@@ -12,13 +12,13 @@
     "digester.js",
     "encryptor.js",
     "index.js",
+    "index.d.ts",
     "jasypt.js",
-    "util.js",
-    "cache.js"
+    "util.js"
   ],
   "scripts": {
     "test": "tap -j4 test/*",
-    "ci": "tap -j4 test/*",
+    "ci": "tap -j4 test/* --coverage",
     "cov": "tap -j4 test/* --coverage-report=html",
     "benchmark": "node ./benchmark/jasypt.js"
   },
@@ -39,15 +39,13 @@
     "Ricky泽阳 <mail@zhoumq.cn>"
   ],
   "bugs": {
-    "url": "https://github.com/rickyes/jasypt/issues"
+    "url": "https://github.com/alt-javascript/jasypt/issues"
   },
   "homepage": "https://github.com/alt-javascript/jasypt#readme",
   "license": "MIT",
   "devDependencies": {
     "beautify-benchmark": "^0.2.4",
     "benchmark": "^2.1.4",
-    "codecov": "^3.6.5",
-    "nyc": "^14.1.1",
     "tap": "^21.6.2"
   },
   "tap": {
@@ -55,8 +53,6 @@
   },
   "dependencies": {
     "commander": "^2.20.0",
-    "create-hash": "^1.2.0",
-    "des.js": "^1.1.0",
-    "lru-cache": "^6.0.0"
+    "des.js": "^1.1.0"
   }
 }

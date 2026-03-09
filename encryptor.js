@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import assert from 'assert';
-import createHash from 'create-hash';
 import des from 'des.js';
 import { isEmpty } from "./util.js";
 
@@ -92,7 +91,7 @@ export default class Encryptor {
     while (result.length < totalBytes) {
       let block = Buffer.concat([prev, pwd, salt]);
       for (let i = 0; i < iterations; i++) {
-        block = createHash(hashAlg).update(block).digest();
+        block = crypto.createHash(hashAlg).update(block).digest();
       }
       result = Buffer.concat([result, block]);
       prev = block;

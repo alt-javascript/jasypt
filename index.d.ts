@@ -74,9 +74,9 @@ export declare class Jasypt {
 
   constructor();
 
-  encrypt(message: string, password: string, algorithm?: EncryptionAlgorithm, iterations?: number, salt?: Buffer): string | null;
-  decrypt(encryptedMessage: string, password: string, algorithm?: EncryptionAlgorithm, iterations?: number, salt?: Buffer): string | null;
-  digest(message: string, password?: string, iterations?: number): string | null;
+   encrypt(message: string, password?: string, algorithm?: EncryptionAlgorithm, iterations?: number, salt?: Buffer): string | null;
+   decrypt(encryptedMessage: string, password?: string, algorithm?: EncryptionAlgorithm, iterations?: number): string | null;
+   digest(message: string, iterations?: number): string | null;
 }
 
 export default Jasypt;
