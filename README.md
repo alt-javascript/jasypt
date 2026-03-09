@@ -25,12 +25,10 @@ Jasypt (Java) clone for Node.js
 import Jasypt from '@alt-javascript/jasypt';
 
 const jasypt = new Jasypt();
-// set password
-jasypt.setPassword('G0CvDz7oJn60');
 // encrypt
-const encryptMsg = jasypt.encrypt('admin');
+const encryptMsg = jasypt.encrypt('admin','G0CvDz7oJn60');
 // decrypt
-const decryptMsg = jasypt.decrypt(encryptMsg);
+const decryptMsg = jasypt.decrypt(encryptMsg,'G0CvDz7oJn60');
 ```
 
 **`Digester SDK`**
@@ -70,9 +68,9 @@ Supported algorithms:
 
 Examples:
 
-  $ jasypt -p 0x1995 encrypt admin
-  $ jasypt -p 0x1995 decrypt nsbC5r0ymz740/aURtuRWw==
-  $ jasypt -p 0x1995 -a PBEWITHMD5ANDTRIPLEDES encrypt admin
+  $ jasypt encrypt -p 0x1995 admin
+  $ jasypt decrypt -p 0x1995 nsbC5r0ymz740/aURtuRWw==
+  $ jasypt encrypt -p 0x1995 -a PBEWITHMD5ANDTRIPLEDES admin
 
   $ jasypt digest admin
   $ jasypt digest -a SHA-512 -i 500 -s 16 admin
