@@ -38,6 +38,10 @@
   "contributors": [
     "Ricky泽阳 <mail@zhoumq.cn>"
   ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "bugs": {
     "url": "https://github.com/alt-javascript/jasypt/issues"
   },
