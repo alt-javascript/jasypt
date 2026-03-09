@@ -22,23 +22,8 @@ const DEFAULT_ALGORITHM = 'PBEWITHMD5ANDDES';
 
 const jasypt = new Jasypt();
 
-const setPassword = (value) => {
-  jasypt.setPassword(value);
-};
-
-const setAlgorithm = (value) => {
-  if (!ALGORITHMS.includes(value)) {
-    console.error(`Unknown algorithm: ${value}`);
-    console.error(`Supported algorithms: ${ALGORITHMS.join(', ')}`);
-    process.exit(1);
-  }
-  jasypt.setAlgorithm(value);
-};
-
 program
   .version(pkg.version, '-v, --version')
-  .option('-p, --password <pwd>', 'The secret key', setPassword)
-  .option('-a, --algorithm <algo>', `Encryption algorithm (default: ${DEFAULT_ALGORITHM})`, setAlgorithm)
   .on('--help', function() {
     console.log('');
     console.log('Supported algorithms:');
@@ -49,9 +34,9 @@ program
     console.log('');
     console.log('Examples:');
     console.log('');
-    console.log('  $ jasypt -p 0x1995 encrypt admin');
-    console.log('  $ jasypt -p 0x1995 decrypt nsbC5r0ymz740/aURtuRWw==');
-    console.log('  $ jasypt -p 0x1995 -a PBEWITHMD5ANDTRIPLEDES encrypt admin');
+    console.log('  $ jasypt encrypt -p 0x1995 admin');
+    console.log('  $ jasypt decrypt -p 0x1995 nsbC5r0ymz740/aURtuRWw==');
+    console.log('  $ jasypt encrypt -p 0x1995 -a PBEWITHMD5ANDTRIPLEDES admin');
     console.log('');
     console.log('  $ jasypt digest admin');
     console.log('  $ jasypt digest -a SHA-512 -i 500 -s 16 admin');
@@ -63,16 +48,20 @@ program
   .command('encrypt <msg>')
   .alias('enc')
   .description('Encrypt a plaintext message')
-  .action((msg) => {
-    console.log(jasypt.encrypt(msg));
+  .option('-p, --password <pwd>', 'The secret key')
+  .option('-a, --algorithm <algo>', `Encryption algorithm (default: ${DEFAULT_ALGORITHM})`)
+  .action((msg,cmd) => {
+    console.log(jasypt.encrypt(msg,cmd.password, cmd.algorithm));
   });
 
 program
   .command('decrypt <msg>')
   .alias('dec')
+  .option('-p, --password <pwd>', 'The secret key')
+  .option('-a, --algorithm <algo>', `Encryption algorithm (default: ${DEFAULT_ALGORITHM})`)
   .description('Decrypt an encrypted message')
-  .action((msg) => {
-    console.log(jasypt.decrypt(msg));
+  .action((msg,cmd) => {
+    console.log(jasypt.decrypt(msg,cmd.password, cmd.algorithm));
   });
 
 program

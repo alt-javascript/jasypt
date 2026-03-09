@@ -9,4 +9,5 @@
   * Add a switch for selecting algorithm, and add support for variant algorithms
   * Change -e / -d options to commands encrypt|enc and decrypt|dec
   * Add digest & match commands, with options.
+  * Remove decryptConfig operation and test; is a separate concern, handled in alt-javascript/config
   

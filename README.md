@@ -1,4 +1,4 @@
-## @alt-javascript/Jasypt
+## @alt-javascript/jasypt
 
 [![NPM version][npm-image]][npm-url]
 [![build status][build-image]][build-url]
@@ -87,70 +87,6 @@ Examples:
 | `-a, --algorithm <algo>` | `SHA-256` | Digest algorithm (`MD5`, `SHA-1`, `SHA-224`, `SHA-256`, `SHA-384`, `SHA-512`) |
 | `-i, --iterations <n>` | `1000` | Number of hash iterations |
 | `-s, --salt-size <n>` | `8` | Salt size in bytes |
-
-#### Decrypt ENC(...) values for Spring Boot
-``` js
-// decrypt ENC(xxx) values in a config object
-const data = {
-  code: 42,
-  test: {
-    db: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)',
-    pwd: {
-      a: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)'
-    },
-    asad: {
-      pwd: {
-        str: 'str',
-        host: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)',
-        pwd: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)'
-      }
-    },
-    items: [{
-      user: 'user1',
-      pwd: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)'
-    }, {
-      user: 'user2',
-      pwd: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)'
-    }, {
-      user: 'user3',
-      pwd: 'ENC(c0KA89TBZ6TbLn7E6RIiFQ==)'
-    }],
-  }
-};
-
-const jasypt = new Jasypt();
-jasypt.setPassword('P8dEw34TgvbY');
-jasypt.decryptConfig(data);
-```
-``` js
-// decrypted result
-const data = {
-  code: 42,
-  test: {
-    db: 'admin',
-    pwd: {
-      a: 'admin'
-    },
-    asad: {
-      pwd: {
-        str: 'str',
-        host: 'admin',
-        pwd: 'admin'
-      }
-    },
-    items: [{
-      user: 'user1',
-      pwd: 'admin'
-    }, {
-      user: 'user2',
-      pwd: 'admin'
-    }, {
-      user: 'user3',
-      pwd: 'admin'
-    }],
-  }
-};
-```
 
 This project is a fork (clone) of [jasypt @ npmjs.com](https://www.npmjs.com/package/jasypt) | [jasypt @ github.com/rickyes](https://github.com/rickyes/jasypt) by
 [Ricky泽阳](mailtto://mail@zhoumq.cn), updated to work with Node LTS (post v16) with additional features, and improved CLI options.

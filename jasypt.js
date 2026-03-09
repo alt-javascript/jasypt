@@ -1,97 +1,57 @@
-import crypto from 'crypto';
 import assert from 'assert';
 import Encryptor from './encryptor.js';
-import { isEmpty, isType } from './util.js';
-import cacher from './cache.js';
+import {isEmpty} from './util.js';
+import Digester from "./digester.js";
 
 export default class Jasypt {
 
-  constructor(opts = {}) {
-    this._encryptor = new Encryptor();
-    this._encryptor.setAlgorithm('PBEWithMD5AndDES');
-    this.salt = opts.salt || crypto.randomBytes(8);
-    this.iterations = opts.iterations || 1000;
-    this.password = '';
-  }
-
-  getCacheKey(key) {
-    return `${this.salt}_${this.iterations}_${this.password}_${key}`;
-  }
-
-  /**
-   * Set the encryption algorithm
-   * @param {String} algorithm algorithm name
-   */
-  setAlgorithm(algorithm) {
-    this._encryptor.setAlgorithm(algorithm);
-  }
-
-  /**
-   * Set the encryption password
-   * @param {String} password secret key
-   */
-  setPassword(password) {
-    assert(!isEmpty(password), 'Password cannot be set empty');
-    this.password = password;
+  constructor() {
   }
 
   /**
    * Encrypt a plaintext message
    * @param {String} message text to encrypt
+   * @param {String} password password for encryption
+   * @param {String} algorithm algorithm for encryption
+   * @param {String} salt random salt for encryption
+   * @param {Integer} iterations number of iterations encryption
    */
-  encrypt(message) {
+  encrypt(message, password, algorithm, iterations, salt) {
     if (isEmpty(message)) {
       return null;
     }
-    return this._encryptor.encrypt(message, this.password, this.salt, this.iterations);
+    const encryptor = new Encryptor({ password : password, algorithm :algorithm, salt:salt, iterations:iterations });
+    return encryptor.encrypt(message, password, iterations, salt);
   }
 
   /**
    * Decrypt an encrypted message
    * @param {String} encryptedMessage text to decrypt
+   * @param {String} password password for decrypt
+   * @param {String} algorithm algorithm for decryption
+   * @param {String} salt random salt for decryption
+   * @param {Integer} iterations number of iterations decryption
    */
-  decrypt(encryptedMessage) {
+  decrypt(encryptedMessage,password, algorithm, iterations, salt) {
     if (isEmpty(encryptedMessage)) {
       return null;
     }
-
-    const cacheKey = this.getCacheKey(encryptedMessage);
-    if (cacher.has(cacheKey)) return cacher.get(cacheKey);
-
-    const value = this._encryptor.decrypt(encryptedMessage, this.password, this.iterations);
-    cacher.set(cacheKey, value);
-
-    return value;
+    const encryptor = new Encryptor({ password : password, algorithm :algorithm, salt:salt, iterations:iterations });
+    return encryptor.decrypt(encryptedMessage, password, iterations);
   }
 
   /**
-   * Recursively decrypt all ENC(xxx) values in a config object
-   * @param {Object} obj config object
+   * Digest a plaintext message
+   * @param {String} message text to encrypt
+   * @param {String} password password for encrypt
+   * @param {Integer} iterations number of iterations encrypt
    */
-  decryptConfig(obj) {
-    if (!isType('Object', obj)) {
-      return;
+  digest(message, password, iterations) {
+    if (isEmpty(message)) {
+      return null;
     }
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const value = obj[key];
-        if (isType('Object', value)) {
-          this.decryptConfig(value);
-        } else if (isType('String', value)) {
-          if (value.indexOf('ENC(') === 0 && value.lastIndexOf(')') === value.length - 1) {
-            const encryptMsg = value.substring(4, value.length - 1);
-            obj[key] = this.decrypt(encryptMsg);
-          }
-        } else if (isType('Array', value)) {
-          for (const item of value) {
-            if (isType('Object', item)) {
-              this.decryptConfig(item);
-            }
-          }
-        } else {
-          continue;
-        }
-      }
-    }
+    const digester = new Digester();
+    return digester.digest(message, password ?? this.password, iterations ?? this.iterations);
   }
+
 }

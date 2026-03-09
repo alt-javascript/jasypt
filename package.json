@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rickyes/jasypt.git"
+    "url": "git+https://github.com/alt-javascript/jasypt.git"
   },
   "keywords": [
     "jasypt",
@@ -41,7 +41,7 @@
   "bugs": {
     "url": "https://github.com/rickyes/jasypt/issues"
   },
-  "homepage": "https://github.com/rickyes/jasypt#readme",
+  "homepage": "https://github.com/alt-javascript/jasypt#readme",
   "license": "MIT",
   "devDependencies": {
     "beautify-benchmark": "^0.2.4",

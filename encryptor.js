@@ -1,6 +1,8 @@
+import crypto from 'crypto';
 import assert from 'assert';
 import createHash from 'create-hash';
 import des from 'des.js';
+import {isEmpty} from "./util.js";
 
 const DESCBC = des.CBC.instantiate(des.DES);
 const EDECBC = des.CBC.instantiate(des.EDE);
@@ -12,8 +14,10 @@ const ALGO_CONFIG = {
 };
 
 export default class Encryptor {
-  constructor() {
-    this.algorithm = 'PBEWITHMD5ANDDES';
+  constructor(opts = {}) {
+    this.setAlgorithm( opts.algorithm ||'PBEWITHMD5ANDDES');
+    this.salt = opts.salt || crypto.randomBytes(8);
+    this.iterations = opts.iterations || 1000;
   }
 
   /**
@@ -24,6 +28,23 @@ export default class Encryptor {
     const normalized = algorithm.toUpperCase();
     assert(ALGO_CONFIG[normalized], `Unsupported algorithm: ${algorithm}`);
     this.algorithm = normalized;
+  }
+
+  /**
+   * Set the encryption salt
+   * @param {String} salt algorithm salt
+   */
+  setSalt(salt) {
+    // this.salt = isEmpty(salt) ? crypto.randomBytes(8) : Buffer.from(salt);
+    this.salt =  crypto.randomBytes(8);
+  }
+
+  /**
+   * Set the encryption salt
+   * @param {Integer} iterations algorithm iterations
+   */
+  setIterations(iterations) {
+    this.iterations = iterations || 1000;
   }
 
   /**
@@ -72,16 +93,17 @@ export default class Encryptor {
    * @param {Number} iterations iteration count
    */
   encrypt(payload, password, salt, iterations) {
+    const _salt = salt ?? this.salt
     const { Cipher } = ALGO_CONFIG[this.algorithm];
-    const kiv = this.getKeyIV(password, salt, iterations);
+    const kiv = this.getKeyIV(password || '', _salt, iterations ?? this.iterations);
     const cipher = Cipher.create({ type: 'encrypt', key: Array.from(kiv[0]), iv: Array.from(kiv[1]) });
 
     const input = Array.from(Buffer.from(payload, 'utf-8'));
     const out = Buffer.from(cipher.update(input).concat(cipher.final()));
-    const result = Buffer.alloc(out.length + salt.length);
+    const result = Buffer.alloc(out.length + _salt.length);
 
-    salt.copy(result, 0, 0, salt.length);
-    out.copy(result, salt.length, 0, out.length);
+    _salt.copy(result, 0, 0, _salt.length);
+    out.copy(result, _salt.length, 0, out.length);
 
     return result.toString('base64');
   }
@@ -108,7 +130,7 @@ export default class Encryptor {
     encryptedMessage.copy(salt, 0, saltStart, saltSize);
     encryptedMessage.copy(encryptedMessageKernel, 0, encMesKernelStart, encryptedMessage.length);
 
-    const kiv = this.getKeyIV(password, salt, iterations);
+    const kiv = this.getKeyIV(password || '', salt, iterations ?? this.iterations);
     const decipher = Cipher.create({ type: 'decrypt', key: Array.from(kiv[0]), iv: Array.from(kiv[1]) });
 
     const decrypted = decipher.update(Array.from(encryptedMessageKernel)).concat(decipher.final());
