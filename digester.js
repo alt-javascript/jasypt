@@ -1,16 +1,24 @@
 import assert from 'assert';
 import crypto from 'crypto';
-import createHash from 'create-hash';
 
-// Maps jasypt-compatible algorithm names to create-hash algorithm names
+// Maps jasypt-compatible algorithm names to Node.js crypto hash names
 const ALGO_MAP = {
-  'MD5':     'md5',
-  'SHA-1':   'sha1',
-  'SHA-224': 'sha224',
-  'SHA-256': 'sha256',
-  'SHA-384': 'sha384',
-  'SHA-512': 'sha512',
+  'MD2':         'md2',
+  'MD5':         'md5',
+  'SHA-1':       'sha1',
+  'SHA-224':     'sha224',
+  'SHA-256':     'sha256',
+  'SHA-384':     'sha384',
+  'SHA-512':     'sha512',
+  'SHA-512/224': 'sha512-224',
+  'SHA-512/256': 'sha512-256',
+  'SHA3-224':    'sha3-224',
+  'SHA3-256':    'sha3-256',
+  'SHA3-384':    'sha3-384',
+  'SHA3-512':    'sha3-512',
 };
+
+const _availableHashes = new Set(crypto.getHashes());
 
 class Digester {
   constructor() {
@@ -24,9 +32,9 @@ class Digester {
    * @param {String} algorithm algorithm name (e.g. 'SHA-256')
    */
   setAlgorithm(algorithm) {
-    const upper = algorithm.toUpperCase();
-    assert(ALGO_MAP[upper], `Unsupported digest algorithm: ${algorithm}`);
-    this.algorithm = upper;
+    assert(ALGO_MAP[algorithm], `Unsupported digest algorithm: ${algorithm}`);
+    assert(_availableHashes.has(ALGO_MAP[algorithm]), `Digest algorithm ${algorithm} is not available in this OpenSSL build`);
+    this.algorithm = algorithm;
   }
 
   /**
@@ -56,9 +64,9 @@ class Digester {
    */
   _compute(hashAlg, salt, message, iterations) {
     const msg = Buffer.from(message, 'utf-8');
-    let digest = createHash(hashAlg).update(salt).update(msg).digest();
+    let digest = crypto.createHash(hashAlg).update(salt).update(msg).digest();
     for (let i = 1; i < iterations; i++) {
-      digest = createHash(hashAlg).update(digest).digest();
+      digest = crypto.createHash(hashAlg).update(digest).digest();
     }
     return digest;
   }
@@ -96,6 +104,6 @@ class Digester {
   }
 }
 
-Digester.SUPPORTED_ALGORITHMS = Object.keys(ALGO_MAP);
+Digester.SUPPORTED_ALGORITHMS = Object.keys(ALGO_MAP).filter(k => _availableHashes.has(ALGO_MAP[k]));
 
 export default Digester;

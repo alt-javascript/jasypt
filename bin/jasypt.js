@@ -5,6 +5,7 @@ import { createRequire } from 'module';
 import program from 'commander';
 import Jasypt from '../index.js';
 import Digester from '../digester.js';
+import { SUPPORTED_ALGORITHMS } from '../encryptor.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
@@ -12,12 +13,7 @@ const pkg = require('../package.json');
 const DIGEST_ALGORITHMS = Digester.SUPPORTED_ALGORITHMS;
 const DEFAULT_DIGEST_ALGORITHM = 'SHA-256';
 
-const ALGORITHMS = [
-  'PBEWITHMD5ANDDES',
-  'PBEWITHMD5ANDTRIPLEDES',
-  'PBEWITHSHA1ANDDESEDE',
-];
-
+const ALGORITHMS = SUPPORTED_ALGORITHMS;
 const DEFAULT_ALGORITHM = 'PBEWITHMD5ANDDES';
 
 const jasypt = new Jasypt();
