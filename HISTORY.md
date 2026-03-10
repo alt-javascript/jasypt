@@ -1,5 +1,10 @@
-  1.0.0 / 2026-03-10
-  ==================
+1.0.1 / 2026-03-10
+==================
+
+* CLI help includes digest algorithms.
+
+1.0.0 / 2026-03-10 
+==================
   
   * Initial fork - @craigparra, updates with Claude: 
     * Upgrade to LTS 24 and fix crypto incompatibility failures.

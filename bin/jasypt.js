@@ -23,8 +23,18 @@ program
   .on('--help', function() {
     console.log('');
     console.log('Supported algorithms:');
+    console.log('');
+    console.log('  encrypt/decrypt:');
+    console.log('');
     ALGORITHMS.forEach(a => {
       const marker = a === DEFAULT_ALGORITHM ? ' (default)' : '';
+      console.log(`  ${a}${marker}`);
+    });
+    console.log('');
+    console.log('  digest/matches:');
+    console.log('');
+    DIGEST_ALGORITHMS.forEach(a => {
+      const marker = a === DEFAULT_DIGEST_ALGORITHM ? ' (default)' : '';
       console.log(`  ${a}${marker}`);
     });
     console.log('');
@@ -38,6 +48,7 @@ program
     console.log('  $ jasypt digest -a SHA-512 -i 500 -s 16 admin');
     console.log('  $ jasypt matches admin 6N0oHJb7...==');
     console.log('  $ jasypt matches -a SHA-512 -i 500 -s 16 admin 6N0oHJb7...==');
+    console.log('');
   });
 
 program

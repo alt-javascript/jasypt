@@ -55,9 +55,9 @@ Options:
   -h, --help              output usage information
 
 Commands:
-  encrypt|enc <msg>       Encrypt a plaintext message
-  decrypt|dec <msg>       Decrypt an encrypted message
-  digest|dig <msg>        One-way digest (hash) a message
+  encrypt|enc <msg>            Encrypt a plaintext message
+  decrypt|dec <msg>             Decrypt an encrypted message
+  digest|dig <msg>              One-way digest (hash) a message
   matches|match <msg> <stored>  Verify a message against a stored digest
 
 Supported algorithms:
@@ -89,10 +89,10 @@ Supported algorithms:
   digest/matches:
   
   MD2
-  MD5
+  MD5 
   SHA-1 
   SHA-224
-  SHA-256
+  SHA-256 (default)
   SHA-384
   SHA-512
   SHA-512/224
@@ -101,6 +101,7 @@ Supported algorithms:
   SHA3-256
   SHA3-384
   SHA3-512
+  
 Examples:
 
   $ jasypt encrypt -p 0x1995 admin
