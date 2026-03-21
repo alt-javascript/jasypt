@@ -68,7 +68,12 @@ program
   .option('-a, --algorithm <algo>', `Encryption algorithm (default: ${DEFAULT_ALGORITHM})`)
   .description('Decrypt an encrypted message')
   .action((msg,cmd) => {
-    console.log(jasypt.decrypt(msg,cmd.password, cmd.algorithm));
+    try {
+      console.log(jasypt.decrypt(msg,cmd.password, cmd.algorithm));
+    } catch (e) {
+      console.error('Decryption failed — wrong password or corrupted ciphertext.');
+      process.exit(1);
+    }
   });
 
 program
